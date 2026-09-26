@@ -47,8 +47,8 @@
         .nav-tab.active { background: var(--primary); color: #fff; font-weight: bold; }
         
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content { display: none !important; }
+        .tab-content.active { display: block !important; }
         
         .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .card h3 { margin-bottom: 10px; font-size: 1rem; color: var(--accent); }
@@ -88,12 +88,12 @@
     </header>
 
     <div class="nav-tabs">
-        <button type="button" class="nav-tab active" onclick="switchTab('compra', this)">Compra</button>
-        <button type="button" class="nav-tab" onclick="switchTab('beneficios', this)">💳 Benefícios</button>
-        <button type="button" class="nav-tab" onclick="switchTab('lista', this)">📋 Lista</button>
-        <button type="button" class="nav-tab" onclick="switchTab('validade', this)">📅 Validade</button>
-        <button type="button" class="nav-tab" onclick="switchTab('cupom', this)">📷 Cupom</button>
-        <button type="button" class="nav-tab" onclick="switchTab('precos', this)">📊 Preços</button>
+        <button type="button" class="nav-tab active" onclick="switchTab('compra')">Compra</button>
+        <button type="button" class="nav-tab" onclick="switchTab('beneficios')">💳 Benefícios</button>
+        <button type="button" class="nav-tab" onclick="switchTab('lista')">📋 Lista</button>
+        <button type="button" class="nav-tab" onclick="switchTab('validade')">📅 Validade</button>
+        <button type="button" class="nav-tab" onclick="switchTab('cupom')">📷 Cupom</button>
+        <button type="button" class="nav-tab" onclick="switchTab('precos')">📊 Preços</button>
     </div>
 
     <div class="container">
@@ -220,34 +220,31 @@
         </div>
     </div>
 
-    <!-- CRIADO FICHEIRO DE CONFIGURAÇÃO DE PERMISSÃO PARA O VERCEL -->
-    <!-- (Garante permissão explícita de câmara e media no iframe do Vercel) -->
-    <script type="text/javascript">
-        // Injetar permissão dinâmica de câmara via meta/iframe se necessário
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            console.log("MediaDevices suportados e ativos.");
-        }
-    </script>
-
     <script>
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        function switchTab(tabId) {
+            // Esconde todas as abas e remove active de todos os botões
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('active');
+            });
             
+            // Ativa a aba alvo
             let targetTab = document.getElementById(tabId);
-            if(targetTab) targetTab.classList.add('active');
-            
-            if(!btn) {
-                let tabs = document.querySelectorAll('.nav-tab');
-                tabs.forEach(t => {
-                    if(t.getAttribute('onclick') && t.getAttribute('onclick').includes(tabId)) {
-                        t.classList.add('active');
-                    }
-                });
-            } else {
-                btn.classList.add('active');
+            if(targetTab) {
+                targetTab.classList.add('active');
             }
+            
+            // Ativa o botão correspondente
+            let buttons = document.querySelectorAll('.nav-tab');
+            buttons.forEach(btn => {
+                if(btn.getAttribute('onclick').includes(tabId)) {
+                    btn.classList.add('active');
+                }
+            });
 
+            // Funções de carregamento específico de cada aba
             if(tabId === 'precos') carregarComparador();
             if(tabId === 'cupom') renderizarConferenciaCupom();
             if(tabId === 'lista') renderizarBaseDadosLista();
@@ -517,7 +514,6 @@
             
             readerDiv.style.display = 'block';
             
-            // CORREÇÃO CRUCIAL PARA MÓVEL: Pequeno atraso para o motor ler a DOM ativa
             setTimeout(() => {
                 if(!html5QrCode) {
                     html5QrCode = new Html5Qrcode("reader");
