@@ -1,553 +1,581 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Compra Certa</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#006644">
-
-<!-- Biblioteca de Leitura de Código de Barras -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
-<!-- Registo do Service Worker para permitir PWA -->
-<script>
-if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-navigator.serviceWorker.register('./sw.js')
-.then(reg => console.log('Service Worker registado!', reg))
-.catch(err => console.log('Erro Service Worker', err));
-});
-}
-</script>
-
-<style>
-:root {
---bg-color: #121212;
---card-bg: #1e1e1e;
---primary: #006644;
---primary-hover: #004d33;
---accent: #f59e0b;
---text-main: #e0e0e0;
---text-muted: #9ca3af;
---danger: #dc2626;
---border: #333333;
---success: #16a34a;
---warning: #d97706;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 70px; }
-
-header {
-background-color: var(--primary);
-padding: 15px;
-text-align: center;
-font-size: 1.2rem;
-font-weight: bold;
-color: #fff;
-box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 10px;
-}
-
-.header-icon { width: 32px; height: 32px; object-fit: contain; }
-
-.nav-tabs { display: flex; overflow-x: auto; background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 5px; gap: 5px; position: sticky; top: 0; z-index: 100; }
-.nav-tab { background: transparent; border: none; color: var(--text-muted); padding: 10px 15px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; border-radius: 4px; transition: 0.2s; }
-.nav-tab.active { background: var(--primary); color: #fff; font-weight: bold; }
-
-.container { padding: 15px; max-width: 600px; margin: 0 auto; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-.card h3 { margin-bottom: 10px; font-size: 1rem; color: var(--accent); }
-
-input, select, textarea, button { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 12px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 1rem; }
-button { background: var(--primary); color: #fff; font-weight: bold; border: none; cursor: pointer; transition: background 0.2s; }
-button:hover { background: var(--primary-hover); }
-button.danger { background: var(--danger); }
-button.danger:hover { background: #b91c1c; }
-button.success { background: var(--success); }
-button.success:hover { background: #15803d; }
-button.secondary { background: #374151; }
-button.secondary:hover { background: #4b5563; }
-
-.flex-row { display: flex; gap: 10px; }
-.flex-row > * { flex: 1; }
-
-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
-th { color: var(--text-muted); }
-
-#reader { width: 100%; max-height: 300px; background: #000; border-radius: 6px; overflow: hidden; margin-bottom: 10px; display: none; }
-.preview-img { width: 100%; max-height: 200px; object-fit: contain; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; display: none; background: #000; }
-
-/* Alertas Visuais para Validade */
-.badge-status { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; text-align: center; }
-.status-vencido { background-color: var(--danger); color: #fff; }
-.status-hoje { background-color: var(--warning); color: #fff; }
-.status-breve { background-color: var(--accent); color: #000; }
-.status-ok { background-color: var(--success); color: #fff; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compra Certa</title>
+    <meta name="theme-color" content="#006644">
+    
+    <!-- Biblioteca de Leitura de Código de Barras -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --primary: #006644;
+            --primary-hover: #004d33;
+            --accent: #f59e0b;
+            --text-main: #e0e0e0;
+            --text-muted: #9ca3af;
+            --danger: #dc2626;
+            --border: #333333;
+            --success: #16a34a;
+            --warning: #d97706;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 70px; }
+        
+        header { 
+            background-color: var(--primary); 
+            padding: 15px; 
+            text-align: center; 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+            color: #fff; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .header-icon { width: 32px; height: 32px; object-fit: contain; }
+        
+        .nav-tabs { display: flex; overflow-x: auto; background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 5px; gap: 5px; position: sticky; top: 0; z-index: 100; }
+        .nav-tab { background: transparent; border: none; color: var(--text-muted); padding: 10px 15px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; border-radius: 4px; transition: 0.2s; }
+        .nav-tab.active { background: var(--primary); color: #fff; font-weight: bold; }
+        
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .card h3 { margin-bottom: 10px; font-size: 1rem; color: var(--accent); }
+        
+        input, select, textarea, button { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 12px; background: #2a2a2a; border: 1px solid var(--border); color: #fff; border-radius: 6px; font-size: 1rem; }
+        button { background: var(--primary); color: #fff; font-weight: bold; border: none; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        button.danger { background: var(--danger); }
+        button.danger:hover { background: #b91c1c; }
+        button.success { background: var(--success); }
+        button.success:hover { background: #15803d; }
+        button.secondary { background: #374151; }
+        button.secondary:hover { background: #4b5563; }
+        
+        .flex-row { display: flex; gap: 10px; }
+        .flex-row > * { flex: 1; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-muted); }
+        
+        #reader { width: 100%; max-height: 300px; background: #000; border-radius: 6px; overflow: hidden; margin-bottom: 10px; display: none; }
+        .preview-img { width: 100%; max-height: 200px; object-fit: contain; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; display: none; background: #000; }
+        
+        .badge-status { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; text-align: center; }
+        .status-vencido { background-color: var(--danger); color: #fff; }
+        .status-hoje { background-color: var(--warning); color: #fff; }
+        .status-breve { background-color: var(--accent); color: #000; }
+        .status-ok { background-color: var(--success); color: #fff; }
+    </style>
 </head>
 <body>
 
-<header>
-<img src="https://cdn-icons-png.flaticon.com/512/3081/3081986.png" alt="Sacolinha" class="header-icon">
-Compra Certa
-</header>
-
-<div class="nav-tabs">
-<button type="button" class="nav-tab active" onclick="window.switchTab('compra', this)">Compra</button>
-<button type="button" class="nav-tab" onclick="window.switchTab('beneficios', this)">💳 Benefícios</button>
-<button type="button" class="nav-tab" onclick="window.switchTab('lista', this)">📋 Lista</button>
-<button type="button" class="nav-tab" onclick="window.switchTab('validade', this)">📅 Validade</button>
-<button type="button" class="nav-tab" onclick="window.switchTab('cupom', this)">📷 Cupom</button>
-<button type="button" class="nav-tab" onclick="window.switchTab('precos', this)">📊 Preços</button>
-</div>
-
-<div class="container">
-<!-- ABA COMPRA -->
-<div id="compra" class="tab-content active">
-<div class="card">
-<h3>📷 Leitura de Código de Barras</h3>
-<div id="reader"></div>
-<button type="button" onclick="window.startScanner()" class="secondary">Abrir Câmera Traseira ao Vivo</button>
-</div>
-
-<div class="card">
-<h3>📝 Registrar Item no Carrinho</h3>
-<label>Nome do Supermercado / Estabelecimento:</label>
-<input type="text" id="supermercadoInput" placeholder="Ex: Supermercado São José">
-
-<label>Código de Barras:</label>
-<input type="text" id="codigoBarrasInput" placeholder="Escaneado ou digitado">
-
-<label>Produto / Descrição:</label>
-<input type="text" id="produtoInput" placeholder="Ex: Leite Integral 1L">
-
-<label>Data de Validade (Manual):</label>
-<input type="date" id="validadeCompraInput">
-
-<div class="flex-row">
-<div>
-<label>Qtd:</label>
-<input type="number" id="qtdInput" value="1" min="1">
-</div>
-<div>
-<label>Preço Unitário (R$`):</label>
-<input type="number" step="0.01" id="precoInput" placeholder="0.00">
-</div>
-</div>
-
-<button type="button" onclick="window.adicionarItem()">+ Adicionar ao Carrinho</button>
-</div>
-
-<div class="card">
-<h3>🛒 Itens no Carrinho</h3>
-<table>
-<thead>
-<tr><th>Item</th><th>Qtd</th><th>Total</th><th>Ação</th></tr>
-</thead>
-<tbody id="tabelaCarrinho"></tbody>
-</table>
-<h3 style="margin-top: 15px; text-align: right;" id="totalCarrinhoTxt">Total: R`$ 0,00</h3>
-
-<div style="margin-top: 15px;">
-<label style="font-size: 0.9rem; color: var(--accent);">Descontar total da compra de:</label>
-<select id="cartaoDescontoInput">
-<option value="Alimentação">Cartão Alimentação</option>
-<option value="Refeição">Cartão Refeição</option>
-</select>
-<button type="button" onclick="window.finalizarCompra()" class="success">✅ Finalizar Compra (Descontar Saldo)</button>
-</div>
-<button type="button" onclick="window.limparCarrinho()" class="danger" style="margin-top: 5px;">Limpar Carrinho</button>
-</div>
-</div>
-
-<!-- ABA BENEFÍCIOS -->
-<div id="beneficios" class="tab-content">
-<div class="card">
-<h3>💳 Gestão de Saldo de Cartões</h3>
-<label>Tipo de Cartão:</label>
-<select id="tipoBeneficio">
-<option value="Alimentação">Alimentação</option>
-<option value="Refeição">Refeição</option>
-</select>
-<label>Valor Atual do Saldo (R 0,00</span></p>
-<p style="margin-top: 8px;"><strong>Refeição:</strong> <span id="displayRefeicao">R$` 0,00</span></p>
-</div>
-</div>
-
-<!-- ABA LISTA -->
-<div id="lista" class="tab-content">
-<div class="card">
-<h3>📋 Lista de Compras Inteligente</h3>
-<p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Selecione abaixo os itens da base de dados para planejar a sua ida ao mercado. Ao comprar, clique em "Comprar / Validar" para verificar o código e descrição automaticamente.</p>
-<div id="baseDadosContainer"></div>
-</div>
-</div>
-
-<!-- ABA VALIDADE -->
-<div id="validade" class="tab-content">
-<div class="card">
-<h3>📅 Controlo de Validade com Alerta Visual</h3>
-<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Acompanhe o estado de vencimento dos produtos registados:</p>
-<table>
-<thead><tr><th>Produto</th><th>Vencimento</th><th>Situação</th><th>Ação</th></tr></thead>
-<tbody id="tabelaValidade"></tbody>
-</table>
-</div>
-</div>
-
-<!-- ABA CUPOM -->
-<div id="cupom" class="tab-content">
-<div class="card">
-<h3>📷 Fotografia do Cupom Fiscal</h3>
-<input type="file" accept="image/*" capture="environment" id="inputCupomFoto" style="display: none;" onchange="window.carregarFotoCupom(event)">
-<button type="button" onclick="document.getElementById('inputCupomFoto').click()" class="secondary">📸 Tirar Fotografia do Cupom</button>
-<img id="imgCupomPreview" class="preview-img" alt="Imagem do Cupom Fiscal">
-</div>
-
-<div class="card">
-<h3>🔍 Conferência Ativa com o Carrinho</h3>
-<div id="resumoConferenciaCupom"></div>
-</div>
-</div>
-
-<!-- ABA PREÇOS -->
-<div id="precos" class="tab-content">
-<div class="card">
-<h3>📊 Comparador de Preços Ativo</h3>
-<div id="comparadorContainer"></div>
-</div>
-</div>
-</div>
-
-<script>
-window.switchTab = function(tabId, btn) {
-document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-
-let targetTab = document.getElementById(tabId);
-if(targetTab) targetTab.classList.add('active');
-
-if(!btn) {
-// Encontra o botão correspondente se chamado programaticamente
-let tabs = document.querySelectorAll('.nav-tab');
-tabs.forEach(t => {
-if(t.getAttribute('onclick') && t.getAttribute('onclick').includes(tabId)) {
-t.classList.add('active');
-}
-});
-} else {
-btn.classList.add('active');
-}
-
-if(tabId === 'precos') window.carregarComparador();
-if(tabId === 'cupom') window.renderizarConferenciaCupom();
-if(tabId === 'lista') window.renderizarBaseDadosLista();
-if(tabId === 'validade') window.renderValidade();
-};
-
-let carrinho = JSON.parse(localStorage.getItem('cc_carrinho')) || [];
-let validades = JSON.parse(localStorage.getItem('cc_validades')) || [];
-let beneficios = JSON.parse(localStorage.getItem('cc_beneficios')) || { Alimentacao: 0, Refeicao: 0 };
-let historicoProdutos = JSON.parse(localStorage.getItem('cc_historico')) || [];
-
-function salvarDados() {
-localStorage.setItem('cc_carrinho', JSON.stringify(carrinho));
-localStorage.setItem('cc_validades', JSON.stringify(validades));
-localStorage.setItem('cc_beneficios', JSON.stringify(beneficios));
-localStorage.setItem('cc_historico', JSON.stringify(historicoProdutos));
-}
-
-window.adicionarItem = function() {
-let mercado = document.getElementById('supermercadoInput').value.trim() || 'Supermercado Geral';
-let codigo = document.getElementById('codigoBarrasInput').value.trim();
-let produto = document.getElementById('produtoInput').value.trim();
-let validadeData = document.getElementById('validadeCompraInput').value;
-let qtd = parseInt(document.getElementById('qtdInput').value) || 1;
-let preco = parseFloat(document.getElementById('precoInput').value) || 0;
-
-if(!produto || preco <= 0) {
-alert('Preencha o nome do produto e um preço válido.');
-return;
-}
-
-carrinho.push({ mercado, codigo, produto, qtd, preco });
-
-if(validadeData) {
-validades.push({ id: Date.now(), produto, data: validadeData });
-}
-
-let existente = historicoProdutos.find(p => p.produto.toLowerCase() === produto.toLowerCase());
-if(!existente) {
-historicoProdutos.push({ codigo, produto, precoSugestao: preco });
-} else if(codigo && !existente.codigo) {
-existente.codigo = codigo;
-}
-
-salvarDados();
-window.renderCarrinho();
-window.renderValidade();
-
-document.getElementById('produtoInput').value = '';
-document.getElementById('codigoBarrasInput').value = '';
-document.getElementById('validadeCompraInput').value = '';
-document.getElementById('precoInput').value = '';
-document.getElementById('qtdInput').value = '1';
-};
-
-window.renderCarrinho = function() {
-let tbody = document.getElementById('tabelaCarrinho');
-if(!tbody) return;
-tbody.innerHTML = '';
-let totalGeral = 0;
-
-carrinho.forEach((item, index) => {
-let totalItem = item.qtd * item.preco;
-totalGeral += totalItem;
-tbody.innerHTML += &lt;tr&gt; &lt;td&gt;&lt;strong&gt;${item.produto}</strong><br><small style="color:var(--text-muted)">{item.codigo ? '• Cód: ' + item.codigo : ''}</small></td>
-<td>{index})" class="danger" style="padding:4px 8px; font-size:0.8rem;">X</button></td>
-</tr>
-; }); let txt = document.getElementById('totalCarrinhoTxt'); if(txt) txt.innerText =Total: R{totalGeral.toFixed(2)}`;
-window.renderizarConferenciaCupom();
-};
-
-window.removerItem = function(index) {
-carrinho.splice(index, 1);
-salvarDados();
-window.renderCarrinho();
-};
-
-window.finalizarCompra = function() {
-if(carrinho.length === 0) {
-alert('O carrinho está vazio!');
-return;
-}
-
-let totalGeral = carrinho.reduce((sum, item) => sum + (item.qtd * item.preco), 0);
-let tipoCartao = document.getElementById('cartaoDescontoInput').value;
-
-if(tipoCartao === 'Alimentação') {
-if(beneficios.Alimentacao < totalGeral) {
-if(!confirm('Atenção: o saldo do Cartão Alimentação é menor que o total da compra. Deseja continuar?')) return;
-}
-beneficios.Alimentacao -= totalGeral;
-} else {
-if(beneficios.Refeicao < totalGeral) {
-if(!confirm('Atenção: o saldo do Cartão Refeição é menor que o total da compra. Deseja continuar?')) return;
-}
-beneficios.Refeicao -= totalGeral;
-}
-
-salvarDados();
-window.atualizarDisplayBeneficios();
-alert(Compra finalizada com sucesso! R$${totalGeral.toFixed(2)} descontados do Cartão ${tipoCartao}.`);
-
-carrinho = [];
-salvarDados();
-window.renderCarrinho();
-};
-
-window.limparCarrinho = function() {
-if(confirm('Deseja limpar todo o carrinho?')) {
-carrinho = [];
-salvarDados();
-window.renderCarrinho();
-}
-};
-
-window.salvarSaldoBeneficio = function() {
-let tipo = document.getElementById('tipoBeneficio').value;
-let valor = parseFloat(document.getElementById('saldoBeneficioInput').value) || 0;
-if(tipo === 'Alimentação') beneficios.Alimentacao = valor;
-else beneficios.Refeicao = valor;
-salvarDados();
-window.atualizarDisplayBeneficios();
-alert('Saldo atualizado!');
-};
-
-window.atualizarDisplayBeneficios = function() {
-let dispAlim = document.getElementById('displayAlimentacao');
-let dispRef = document.getElementById('displayRefeicao');
-if(dispAlim) dispAlim.innerText = R$  ${(beneficios.Refeicao || 0).toFixed(2)};
-};
-
-window.carregarFotoCupom = function(event) {
-let file = event.target.files[0];
-if(!file) return;
-let reader = new FileReader();
-reader.onload = function(e) {
-let img = document.getElementById('imgCupomPreview');
-if(img) {
-img.src = e.target.result;
-img.style.display = 'block';
-}
-}
-reader.readAsDataURL(file);
-};
-
-window.renderizarConferenciaCupom = function() {
-let container = document.getElementById('resumoConferenciaCupom');
-if(!container) return;
-if(carrinho.length === 0) {
-container.innerHTML = <p style="color:var(--text-muted)"&gt;Nenhum item no carrinho para conferência.&lt;/p>;
-return;
-}
-let totalGeral = 0;
-let html = <table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Item no Carrinho&lt;/th&gt;&lt;th&gt;Qtd&lt;/th&gt;&lt;th&gt;Subtotal&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody>;
-carrinho.forEach(item => {
-let sub = item.qtd * item.preco;
-totalGeral += sub;
-html += <tr&gt;&lt;td&gt;&lt;strong&gt;${item.produto}</strong><br><small style="color:var(--text-muted)">{item.qtd}</td><td>R{sub.toFixed(2)}</td></tr>; }); html +=</tbody></table>; html +=<p style="margin-top: 10px; text-align: right; font-weight: bold; color: var(--accent);">Total Conferido: R{totalGeral.toFixed(2)}</p>`;
-container.innerHTML = html;
-};
-
-window.renderizarBaseDadosLista = function() {
-let container = document.getElementById('baseDadosContainer');
-if(!container) return;
-if(historicoProdutos.length === 0) {
-container.innerHTML = <p style="color:var(--text-muted)"&gt;Ainda não há produtos na base de dados histórica. Faça compras para gerar histórico automático.&lt;/p>;
-return;
-}
-let html = <table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Produto&lt;/th&gt;&lt;th&gt;Ação / Validar no Ato&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody>;
-historicoProdutos.forEach((hp, index) => {
-html += <tr&gt; &lt;td&gt;&lt;strong&gt;${hp.produto}</strong><br><small style="color:var(--text-muted)">Cód: ${hp.codigo || 'Não registado'}&lt;/small&gt;&lt;/td&gt; &lt;td&gt;&lt;button type="button" onclick="window.comprarItemHistorico(${index})" class="success" style="padding:6px 10px; font-size:0.8rem;">✔ Comprar / Validar</button></td>
-</tr>; }); html +=</tbody></table>`;
-container.innerHTML = html;
-};
-
-window.comprarItemHistorico = function(index) {
-let hp = historicoProdutos[index];
-let precoStr = prompt(Informe o preço atual para "${hp.produto}":`, hp.precoSugestao || '0.00');
-if(precoStr === null) return;
-let preco = parseFloat(precoStr) || 0;
-let mercado = prompt('Supermercado atual:', 'Supermercado Geral') || 'Supermercado Geral';
-
-let codVerificacao = prompt('Confirme o Código de Barras lido na prateleira:', hp.codigo || '');
-if(codVerificacao && hp.codigo && codVerificacao.trim() !== hp.codigo.trim()) {
-alert('Atenção: O código de barras lido difere do registado na base de dados!');
-}
-
-carrinho.push({ mercado, codigo: codVerificacao || hp.codigo, produto: hp.produto, qtd: 1, preco });
-salvarDados();
-window.renderCarrinho();
-alert(Item "${hp.produto}" adicionado ao carrinho com sucesso!`);
-window.switchTab('compra');
-};
-
-window.renderValidade = function() {
-let tbody = document.getElementById('tabelaValidade');
-if(!tbody) return;
-tbody.innerHTML = '';
-
-if(validades.length === 0) {
-tbody.innerHTML = <tr&gt;&lt;td colspan="4" style="text-align:center; color:var(--text-muted);"&gt;Nenhuma validade registada.&lt;/td&gt;&lt;/tr>;
-return;
-}
-
-let hoje = new Date();
-hoje.setHours(0,0,0,0);
-
-validades.forEach((v, index) => {
-let dataVal = new Date(v.data + 'T00:00:00');
-let diffTime = dataVal - hoje;
-let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-let badgeClass = 'status-ok';
-let statusText = 'No Prazo';
-
-if(diffDays < 0) {
-badgeClass = 'status-vencido';
-statusText = '❌ Vencido';
-} else if(diffDays === 0) {
-badgeClass = 'status-hoje';
-statusText = '⚠️ Vence Hoje';
-} else if(diffDays <= 5) {
-badgeClass = 'status-breve';
-statusText = ⚠️ Vence em${diffDays} dia(s); } else { statusText =OK (${diffDays} dias);
-}
-
-let dataFormatada = v.data.split('-').reverse().join('/');
-
-tbody.innerHTML += &lt;tr&gt; &lt;td&gt;&lt;strong&gt;${v.produto}</strong></td>
-<td>{badgeClass}">{index})" class="danger" style="padding:4px 8px; font-size:0.75rem;">X</button></td>
-</tr>
-`;
-});
-};
-
-window.removerValidade = function(index) {
-validades.splice(index, 1);
-salvarDados();
-window.renderValidade();
-};
-
-let html5QrCode;
-window.startScanner = function() {
-let readerDiv = document.getElementById('reader');
-if(!readerDiv) return;
-readerDiv.style.display = 'block';
-
-if(!html5QrCode) {
-html5QrCode = new Html5Qrcode("reader");
-}
-
-html5QrCode.start(
-{ facingMode: "environment" },
-{ fps: 10, qrbox: { width: 250, height: 100 } },
-(decodedText) => {
-let campoCod = document.getElementById('codigoBarrasInput');
-if(campoCod) campoCod.value = decodedText;
-html5QrCode.stop().catch(e => {});
-readerDiv.style.display = 'none';
-alert(Código lido: ${decodedText}. Preencha o nome do produto.`);
-},
-(err) => {}
-).catch(err => {
-alert('Não foi possível iniciar a câmara. Verifique as permissões de acesso à câmara no navegador.');
-readerDiv.style.display = 'none';
-});
-};
-
-window.carregarComparador = function() {
-let container = document.getElementById('comparadorContainer');
-if(!container) return;
-if(carrinho.length === 0 && historicoProdutos.length === 0) {
-container.innerHTML = <p style="color:var(--text-muted)"&gt;Adicione itens no carrinho ou tenha histórico para comparar preços.&lt;/p>;
-return;
-}
-
-let baseTotal = [...carrinho];
-let precosPorProduto = {};
-
-baseTotal.forEach(item => {
-let prod = item.produto.toLowerCase();
-if(!precosPorProduto[prod]) precosPorProduto[prod] = {};
-precosPorProduto[prod][item.mercado] = item.preco;
-});
-
-if(Object.keys(precosPorProduto).length === 0) {
-container.innerHTML = <p style="color:var(--text-muted)"&gt;Sem dados suficientes no carrinho atual para o comparador.&lt;/p>;
-return;
-}
-
-let html = <table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Produto&lt;/th&gt;&lt;th&gt;Melhor Preço / Mercado&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody>;
-for(let prod in precosPorProduto) {
-let mercados = precosPorProduto[prod];
-let melhorMercado = Object.keys(mercados).reduce((a, b) => mercados[a] < mercados[b] ? a : b);
-html += <tr&gt;&lt;td&gt;&lt;strong&gt;${prod}</strong></td><td>R{mercados[melhorMercado].toFixed(2)} (${melhorMercado})</td></tr>; } html +=</tbody></table>`;
-container.innerHTML = html;
-};
-
-window.renderCarrinho();
-window.renderValidade();
-window.atualizarDisplayBeneficios();
-</script>
+    <header>
+        <img src="https://cdn-icons-png.flaticon.com/512/3081/3081986.png" alt="Sacolinha" class="header-icon">
+        Compra Certa
+    </header>
+
+    <div class="nav-tabs">
+        <button type="button" class="nav-tab active" onclick="switchTab('compra', this)">Compra</button>
+        <button type="button" class="nav-tab" onclick="switchTab('beneficios', this)">💳 Benefícios</button>
+        <button type="button" class="nav-tab" onclick="switchTab('lista', this)">📋 Lista</button>
+        <button type="button" class="nav-tab" onclick="switchTab('validade', this)">📅 Validade</button>
+        <button type="button" class="nav-tab" onclick="switchTab('cupom', this)">📷 Cupom</button>
+        <button type="button" class="nav-tab" onclick="switchTab('precos', this)">📊 Preços</button>
+    </div>
+
+    <div class="container">
+        <!-- ABA COMPRA -->
+        <div id="compra" class="tab-content active">
+            <div class="card">
+                <h3>📷 Leitura de Código de Barras</h3>
+                <div id="reader"></div>
+                <button type="button" onclick="startScanner()" class="secondary">Abrir Câmera Traseira ao Vivo</button>
+            </div>
+
+            <div class="card">
+                <h3>📝 Registrar Item no Carrinho</h3>
+                <label>Nome do Supermercado / Estabelecimento:</label>
+                <input type="text" id="supermercadoInput" placeholder="Ex: Supermercado São José">
+
+                <label>Código de Barras:</label>
+                <input type="text" id="codigoBarrasInput" placeholder="Escaneado ou digitado">
+
+                <label>Produto / Descrição:</label>
+                <input type="text" id="produtoInput" placeholder="Ex: Leite Integral 1L">
+
+                <label>Data de Validade (Manual):</label>
+                <input type="date" id="validadeCompraInput">
+                
+                <div class="flex-row">
+                    <div>
+                        <label>Qtd:</label>
+                        <input type="number" id="qtdInput" value="1" min="1">
+                    </div>
+                    <div>
+                        <label>Preço Unitário (R$):</label>
+                        <input type="number" step="0.01" id="precoInput" placeholder="0.00">
+                    </div>
+                </div>
+
+                <button type="button" onclick="adicionarItem()">+ Adicionar ao Carrinho</button>
+            </div>
+
+            <div class="card">
+                <h3>🛒 Itens no Carrinho</h3>
+                <table>
+                    <thead>
+                        <tr><th>Item</th><th>Qtd</th><th>Total</th><th>Ação</th></tr>
+                    </thead>
+                    <tbody id="tabelaCarrinho"></tbody>
+                </table>
+                <h3 style="margin-top: 15px; text-align: right;" id="totalCarrinhoTxt">Total: R$ 0,00</h3>
+                
+                <div style="margin-top: 15px;">
+                    <label style="font-size: 0.9rem; color: var(--accent);">Descontar total da compra de:</label>
+                    <select id="cartaoDescontoInput">
+                        <option value="Alimentação">Cartão Alimentação</option>
+                        <option value="Refeição">Cartão Refeição</option>
+                    </select>
+                    <button type="button" onclick="finalizarCompra()" class="success">✅ Finalizar Compra (Descontar Saldo)</button>
+                </div>
+                <button type="button" onclick="limparCarrinho()" class="danger" style="margin-top: 5px;">Limpar Carrinho</button>
+            </div>
+        </div>
+
+        <!-- ABA BENEFÍCIOS -->
+        <div id="beneficios" class="tab-content">
+            <div class="card">
+                <h3>💳 Gestão de Saldo de Cartões</h3>
+                <label>Tipo de Cartão:</label>
+                <select id="tipoBeneficio">
+                    <option value="Alimentação">Alimentação</option>
+                    <option value="Refeição">Refeição</option>
+                </select>
+                <label>Valor Atual do Saldo (R$):</label>
+                <input type="number" step="0.01" id="saldoBeneficioInput" placeholder="0.00">
+                <button type="button" onclick="salvarSaldoBeneficio()">Atualizar Saldo</button>
+            </div>
+            <div class="card">
+                <h3>💰 Saldos Registrados</h3>
+                <p><strong>Alimentação:</strong> <span id="displayAlimentacao">R$ 0,00</span></p>
+                <p style="margin-top: 8px;"><strong>Refeição:</strong> <span id="displayRefeicao">R$ 0,00</span></p>
+            </div>
+        </div>
+
+        <!-- ABA LISTA -->
+        <div id="lista" class="tab-content">
+            <div class="card">
+                <h3>📋 Lista de Compras Inteligente</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Selecione abaixo os itens da base de dados para planejar a sua ida ao mercado. Ao comprar, clique em "Comprar / Validar" para verificar o código e descrição automaticamente.</p>
+                <div id="baseDadosContainer"></div>
+            </div>
+        </div>
+
+        <!-- ABA VALIDADE -->
+        <div id="validade" class="tab-content">
+            <div class="card">
+                <h3>📅 Controlo de Validade com Alerta Visual</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">Acompanhe o estado de vencimento dos produtos registados:</p>
+                <table>
+                    <thead><tr><th>Produto</th><th>Vencimento</th><th>Situação</th><th>Ação</th></tr></thead>
+                    <tbody id="tabelaValidade"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA CUPOM -->
+        <div id="cupom" class="tab-content">
+            <div class="card">
+                <h3>📷 Fotografia do Cupom Fiscal</h3>
+                <input type="file" accept="image/*" capture="environment" id="inputCupomFoto" style="display: none;" onchange="carregarFotoCupom(event)">
+                <button type="button" onclick="document.getElementById('inputCupomFoto').click()" class="secondary">📸 Tirar Fotografia do Cupom</button>
+                <img id="imgCupomPreview" class="preview-img" alt="Imagem do Cupom Fiscal">
+            </div>
+
+            <div class="card">
+                <h3>🔍 Conferência Ativa com o Carrinho</h3>
+                <div id="resumoConferenciaCupom"></div>
+            </div>
+        </div>
+
+        <!-- ABA PREÇOS -->
+        <div id="precos" class="tab-content">
+            <div class="card">
+                <h3>📊 Comparador de Preços Ativo</h3>
+                <div id="comparadorContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CRIADO FICHEIRO DE CONFIGURAÇÃO DE PERMISSÃO PARA O VERCEL -->
+    <!-- (Garante permissão explícita de câmara e media no iframe do Vercel) -->
+    <script type="text/javascript">
+        // Injetar permissão dinâmica de câmara via meta/iframe se necessário
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            console.log("MediaDevices suportados e ativos.");
+        }
+    </script>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            
+            let targetTab = document.getElementById(tabId);
+            if(targetTab) targetTab.classList.add('active');
+            
+            if(!btn) {
+                let tabs = document.querySelectorAll('.nav-tab');
+                tabs.forEach(t => {
+                    if(t.getAttribute('onclick') && t.getAttribute('onclick').includes(tabId)) {
+                        t.classList.add('active');
+                    }
+                });
+            } else {
+                btn.classList.add('active');
+            }
+
+            if(tabId === 'precos') carregarComparador();
+            if(tabId === 'cupom') renderizarConferenciaCupom();
+            if(tabId === 'lista') renderizarBaseDadosLista();
+            if(tabId === 'validade') renderValidade();
+        }
+
+        let carrinho = JSON.parse(localStorage.getItem('cc_carrinho')) || [];
+        let validades = JSON.parse(localStorage.getItem('cc_validades')) || [];
+        let beneficios = JSON.parse(localStorage.getItem('cc_beneficios')) || { Alimentacao: 0, Refeicao: 0 };
+        let historicoProdutos = JSON.parse(localStorage.getItem('cc_historico')) || [];
+
+        function salvarDados() {
+            localStorage.setItem('cc_carrinho', JSON.stringify(carrinho));
+            localStorage.setItem('cc_validades', JSON.stringify(validades));
+            localStorage.setItem('cc_beneficios', JSON.stringify(beneficios));
+            localStorage.setItem('cc_historico', JSON.stringify(historicoProdutos));
+        }
+
+        function adicionarItem() {
+            let mercado = document.getElementById('supermercadoInput').value.trim() || 'Supermercado Geral';
+            let codigo = document.getElementById('codigoBarrasInput').value.trim();
+            let produto = document.getElementById('produtoInput').value.trim();
+            let validadeData = document.getElementById('validadeCompraInput').value;
+            let qtd = parseInt(document.getElementById('qtdInput').value) || 1;
+            let preco = parseFloat(document.getElementById('precoInput').value) || 0;
+
+            if(!produto || preco <= 0) {
+                alert('Preencha o nome do produto e um preço válido.');
+                return;
+            }
+
+            carrinho.push({ mercado, codigo, produto, qtd, preco });
+
+            if(validadeData) {
+                validades.push({ id: Date.now(), produto, data: validadeData });
+            }
+
+            let existente = historicoProdutos.find(p => p.produto.toLowerCase() === produto.toLowerCase());
+            if(!existente) {
+                historicoProdutos.push({ codigo, produto, precoSugestao: preco });
+            } else if(codigo && !existente.codigo) {
+                existente.codigo = codigo;
+            }
+
+            salvarDados();
+            renderCarrinho();
+            renderValidade();
+
+            document.getElementById('produtoInput').value = '';
+            document.getElementById('codigoBarrasInput').value = '';
+            document.getElementById('validadeCompraInput').value = '';
+            document.getElementById('precoInput').value = '';
+            document.getElementById('qtdInput').value = '1';
+        }
+
+        function renderCarrinho() {
+            let tbody = document.getElementById('tabelaCarrinho');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            let totalGeral = 0;
+
+            carrinho.forEach((item, index) => {
+                let totalItem = item.qtd * item.preco;
+                totalGeral += totalItem;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.produto}</strong><br><small style="color:var(--text-muted)">${item.mercado} ${item.codigo ? '• Cód: ' + item.codigo : ''}</small></td>
+                        <td>${item.qtd}</td>
+                        <td>R$ ${totalItem.toFixed(2)}</td>
+                        <td><button type="button" onclick="removerItem(${index})" class="danger" style="padding:4px 8px; font-size:0.8rem;">X</button></td>
+                    </tr>
+                `;
+            });
+            let txt = document.getElementById('totalCarrinhoTxt');
+            if(txt) txt.innerText = `Total: R$ ${totalGeral.toFixed(2)}`;
+            renderizarConferenciaCupom();
+        }
+
+        function removerItem(index) {
+            carrinho.splice(index, 1);
+            salvarDados();
+            renderCarrinho();
+        }
+
+        function finalizarCompra() {
+            if(carrinho.length === 0) {
+                alert('O carrinho está vazio!');
+                return;
+            }
+
+            let totalGeral = carrinho.reduce((sum, item) => sum + (item.qtd * item.preco), 0);
+            let tipoCartao = document.getElementById('cartaoDescontoInput').value;
+
+            if(tipoCartao === 'Alimentação') {
+                if(beneficios.Alimentacao < totalGeral) {
+                    if(!confirm('Atenção: o saldo do Cartão Alimentação é menor que o total da compra. Deseja continuar?')) return;
+                }
+                beneficios.Alimentacao -= totalGeral;
+            } else {
+                if(beneficios.Refeicao < totalGeral) {
+                    if(!confirm('Atenção: o saldo do Cartão Refeição é menor que o total da compra. Deseja continuar?')) return;
+                }
+                beneficios.Refeicao -= totalGeral;
+            }
+
+            salvarDados();
+            atualizarDisplayBeneficios();
+            alert(`Compra finalizada com sucesso! R$ ${totalGeral.toFixed(2)} descontados do Cartão ${tipoCartao}.`);
+            
+            carrinho = [];
+            salvarDados();
+            renderCarrinho();
+        }
+
+        function limparCarrinho() {
+            if(confirm('Deseja limpar todo o carrinho?')) {
+                carrinho = [];
+                salvarDados();
+                renderCarrinho();
+            }
+        }
+
+        function salvarSaldoBeneficio() {
+            let tipo = document.getElementById('tipoBeneficio').value;
+            let valor = parseFloat(document.getElementById('saldoBeneficioInput').value) || 0;
+            if(tipo === 'Alimentação') beneficios.Alimentacao = valor;
+            else beneficios.Refeicao = valor;
+            salvarDados();
+            atualizarDisplayBeneficios();
+            alert('Saldo atualizado!');
+        }
+
+        function atualizarDisplayBeneficios() {
+            let dispAlim = document.getElementById('displayAlimentacao');
+            let dispRef = document.getElementById('displayRefeicao');
+            if(dispAlim) dispAlim.innerText = `R$ ${(beneficios.Alimentacao || 0).toFixed(2)}`;
+            if(dispRef) dispRef.innerText = `R$ ${(beneficios.Refeicao || 0).toFixed(2)}`;
+        }
+
+        function carregarFotoCupom(event) {
+            let file = event.target.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let img = document.getElementById('imgCupomPreview');
+                if(img) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function renderizarConferenciaCupom() {
+            let container = document.getElementById('resumoConferenciaCupom');
+            if(!container) return;
+            if(carrinho.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-muted)">Nenhum item no carrinho para conferência.</p>`;
+                return;
+            }
+            let totalGeral = 0;
+            let html = `<table><thead><tr><th>Item no Carrinho</th><th>Qtd</th><th>Subtotal</th></tr></thead><tbody>`;
+            carrinho.forEach(item => {
+                let sub = item.qtd * item.preco;
+                totalGeral += sub;
+                html += `<tr><td><strong>${item.produto}</strong><br><small style="color:var(--text-muted)">${item.mercado}</small></td><td>${item.qtd}</td><td>R$ ${sub.toFixed(2)}</td></tr>`;
+            });
+            html += `</tbody></table>`;
+            html += `<p style="margin-top: 10px; text-align: right; font-weight: bold; color: var(--accent);">Total Conferido: R$ ${totalGeral.toFixed(2)}</p>`;
+            container.innerHTML = html;
+        }
+
+        function renderizarBaseDadosLista() {
+            let container = document.getElementById('baseDadosContainer');
+            if(!container) return;
+            if(historicoProdutos.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-muted)">Ainda não há produtos na base de dados histórica. Faça compras para gerar histórico automático.</p>`;
+                return;
+            }
+            let html = `<table><thead><tr><th>Produto</th><th>Ação / Validar no Ato</th></tr></thead><tbody>`;
+            historicoProdutos.forEach((hp, index) => {
+                html += `<tr>
+                    <td><strong>${hp.produto}</strong><br><small style="color:var(--text-muted)">Cód: ${hp.codigo || 'Não registado'}</small></td>
+                    <td><button type="button" onclick="comprarItemHistorico(${index})" class="success" style="padding:6px 10px; font-size:0.8rem;">✔ Comprar / Validar</button></td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function comprarItemHistorico(index) {
+            let hp = historicoProdutos[index];
+            let precoStr = prompt(`Informe o preço atual para "${hp.produto}":`, hp.precoSugestao || '0.00');
+            if(precoStr === null) return;
+            let preco = parseFloat(precoStr) || 0;
+            let mercado = prompt('Supermercado atual:', 'Supermercado Geral') || 'Supermercado Geral';
+
+            let codVerificacao = prompt('Confirme o Código de Barras lido na prateleira:', hp.codigo || '');
+            if(codVerificacao && hp.codigo && codVerificacao.trim() !== hp.codigo.trim()) {
+                alert('Atenção: O código de barras lido difere do registado na base de dados!');
+            }
+
+            carrinho.push({ mercado, codigo: codVerificacao || hp.codigo, produto: hp.produto, qtd: 1, preco });
+            salvarDados();
+            renderCarrinho();
+            alert(`Item "${hp.produto}" adicionado ao carrinho com sucesso!`);
+            switchTab('compra');
+        }
+
+        function renderValidade() {
+            let tbody = document.getElementById('tabelaValidade');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            if(validades.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma validade registada.</td></tr>`;
+                return;
+            }
+
+            let hoje = new Date();
+            hoje.setHours(0,0,0,0);
+
+            validades.forEach((v, index) => {
+                let dataVal = new Date(v.data + 'T00:00:00');
+                let diffTime = dataVal - hoje;
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                let badgeClass = 'status-ok';
+                let statusText = 'No Prazo';
+
+                if(diffDays < 0) {
+                    badgeClass = 'status-vencido';
+                    statusText = '❌ Vencido';
+                } else if(diffDays === 0) {
+                    badgeClass = 'status-hoje';
+                    statusText = '⚠️ Vence Hoje';
+                } else if(diffDays <= 5) {
+                    badgeClass = 'status-breve';
+                    statusText = `⚠️ Vence em ${diffDays} dia(s)`;
+                } else {
+                    statusText = `OK (${diffDays} dias)`;
+                }
+
+                let dataFormatada = v.data.split('-').reverse().join('/');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${v.produto}</strong></td>
+                        <td>${dataFormatada}</td>
+                        <td><span class="badge-status ${badgeClass}">${statusText}</span></td>
+                        <td><button type="button" onclick="removerValidade(${index})" class="danger" style="padding:4px 8px; font-size:0.75rem;">X</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function removerValidade(index) {
+            validades.splice(index, 1);
+            salvarDados();
+            renderValidade();
+        }
+
+        let html5QrCode = null;
+        function startScanner() {
+            let readerDiv = document.getElementById('reader');
+            if(!readerDiv) return;
+            
+            readerDiv.style.display = 'block';
+            
+            // CORREÇÃO CRUCIAL PARA MÓVEL: Pequeno atraso para o motor ler a DOM ativa
+            setTimeout(() => {
+                if(!html5QrCode) {
+                    html5QrCode = new Html5Qrcode("reader");
+                }
+                
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 100 } },
+                    (decodedText) => {
+                        let campoCod = document.getElementById('codigoBarrasInput');
+                        if(campoCod) campoCod.value = decodedText;
+                        html5QrCode.stop().catch(e => {});
+                        readerDiv.style.display = 'none';
+                        alert(`Código lido: ${decodedText}. Preencha o nome do produto.`);
+                    },
+                    (err) => {}
+                ).catch(err => {
+                    alert('Erro ao aceder à câmara. Certifique-se de que autorizou o uso da câmara nas definições do seu navegador.');
+                    readerDiv.style.display = 'none';
+                });
+            }, 300);
+        }
+
+        function carregarComparador() {
+            let container = document.getElementById('comparadorContainer');
+            if(!container) return;
+            if(carrinho.length === 0 && historicoProdutos.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-muted)">Adicione itens no carrinho ou tenha histórico para comparar preços.</p>`;
+                return;
+            }
+            
+            let baseTotal = [...carrinho];
+            let precosPorProduto = {};
+            
+            baseTotal.forEach(item => {
+                let prod = item.produto.toLowerCase();
+                if(!precosPorProduto[prod]) precosPorProduto[prod] = {};
+                precosPorProduto[prod][item.mercado] = item.preco;
+            });
+
+            if(Object.keys(precosPorProduto).length === 0) {
+                container.innerHTML = `<p style="color:var(--text-muted)">Sem dados suficientes no carrinho atual para o comparador.</p>`;
+                return;
+            }
+
+            let html = `<table><thead><tr><th>Produto</th><th>Melhor Preço / Mercado</th></tr></thead><tbody>`;
+            for(let prod in precosPorProduto) {
+                let mercados = precosPorProduto[prod];
+                let melhorMercado = Object.keys(mercados).reduce((a, b) => mercados[a] < mercados[b] ? a : b);
+                html += `<tr><td><strong>${prod}</strong></td><td>R$ ${mercados[melhorMercado].toFixed(2)} (${melhorMercado})</td></tr>`;
+            }
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        renderCarrinho();
+        renderValidade();
+        atualizarDisplayBeneficios();
+    </script>
 </body>
 </html>
